@@ -1,5 +1,5 @@
 import React from "react";
-import { UserRound, ClipboardList, FilePlus, Briefcase } from "lucide-react";
+import { UserRound, FilePlus, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Autoplay from "embla-carousel-autoplay";
@@ -37,15 +37,8 @@ const LandingPage = () => {
             />
           </span>
         </h1>
-        <p className="text-gray-300 sm:mt-4 text-xs sm:text-xl flex gap-2 items-center justify-center">
-          Explore thousands of job listings
-          <span>
-            <ClipboardList className="w-6 h-6 text-pink-400" />
-          </span>
-          or find the perfect candidate
-          <span>
-            <UserRound className="w-6 h-6 text-pink-400" />
-          </span>
+        <p className="text-gray-300 sm:mt-4 text-xs sm:text-xl ">
+          Explore thousands of job listings or find the perfect candidate
         </p>
       </section>
       <div className="flex gap-6 justify-center">
@@ -113,7 +106,7 @@ const LandingPage = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex gap-2">
+            <CardTitle className="flex gap-2 md:gap-1">
               For Job Seekers
               <span>
                 <UserRound className="text-gray-500" />
