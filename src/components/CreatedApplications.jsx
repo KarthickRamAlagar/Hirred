@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import ApplicationCard from "./applicationCard";
+import ApplicationCard from "./ApplicationCard";
 import { useEffect, useState } from "react";
 import { getApplications } from "@/api/apiApplications";
 import useFetch from "@/hooks/useFetch";
