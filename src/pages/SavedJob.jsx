@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { BarLoader } from "react-spinners";
 
 import { getSavedJobs } from "@/api/apiJobs";
-import JobCard from "@/components/jobCard";
+import JobCard from "@/components/JobCard";
 import useFetch from "@/hooks/useFetch";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
