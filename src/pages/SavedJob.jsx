@@ -15,7 +15,7 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
-} from "@/components/ui/pagination";
+} from "@/components/ui/Pagination";
 
 const PER_PAGE = 6;
 

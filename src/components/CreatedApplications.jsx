@@ -13,7 +13,7 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
-} from "@/components/ui/pagination";
+} from "@/components/ui/Pagination";
 
 import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

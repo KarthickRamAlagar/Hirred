@@ -14,7 +14,7 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
-} from "@/components/ui/pagination";
+} from "@/components/ui/Pagination";
 
 const PER_PAGE = 6;
 
@@ -84,7 +84,6 @@ const CreatedJobs = () => {
             )}
           </div>
 
-     
           {totalPages > 1 && (
             <Pagination className="mt-12 justify-center">
               <PaginationContent>
