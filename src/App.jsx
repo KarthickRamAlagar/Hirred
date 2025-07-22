@@ -11,121 +11,63 @@ import "./App.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import SSOCallback from "./components/SSOCallback";
-// const router = createBrowserRouter([
-//   {
-//     element: <AppLayout />,
-//     children: [
-//       {
-//         path: "/",
-//         element: <LandingPage />,
-//       },
-//       {
-//         path: "/sso-callback/google",
-//         element: <SSOCallback />,
-//       },
-//       {
-//         path: "/onboarding",
-//         element: (
-//           <ProtectedRoutes>
-//             <OnBoarding />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//       {
-//         path: "/jobs",
-//         element: (
-//           <ProtectedRoutes>
-//             <JobListing />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//       {
-//         path: "/job/:id",
-//         element: (
-//           <ProtectedRoutes>
-//             <JobPage />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//       {
-//         path: "/post-job",
-//         element: (
-//           <ProtectedRoutes>
-//             <PostJob />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//       {
-//         path: "/saved-jobs",
-//         element: (
-//           <ProtectedRoutes>
-//             <SavedJob />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//       {
-//         path: "/my-jobs",
-//         element: (
-//           <ProtectedRoutes>
-//             <MyJobs />,
-//           </ProtectedRoutes>
-//         ),
-//       },
-//     ],
-//   },
-// ]);
 const router = createBrowserRouter([
   {
-    path: "/Hirred",
     element: <AppLayout />,
     children: [
-      { index: true, element: <LandingPage /> },
-      { path: "sso-callback/google", element: <SSOCallback /> },
       {
-        path: "onboarding",
+        path: "/",
+        element: <LandingPage />,
+      },
+      {
+        path: "/sso-callback/google",
+        element: <SSOCallback />,
+      },
+      {
+        path: "/onboarding",
         element: (
           <ProtectedRoutes>
-            <OnBoarding />
+            <OnBoarding />,
           </ProtectedRoutes>
         ),
       },
       {
-        path: "jobs",
+        path: "/jobs",
         element: (
           <ProtectedRoutes>
-            <JobListing />
+            <JobListing />,
           </ProtectedRoutes>
         ),
       },
       {
-        path: "job/:id",
+        path: "/job/:id",
         element: (
           <ProtectedRoutes>
-            <JobPage />
+            <JobPage />,
           </ProtectedRoutes>
         ),
       },
       {
-        path: "post-job",
+        path: "/post-job",
         element: (
           <ProtectedRoutes>
-            <PostJob />
+            <PostJob />,
           </ProtectedRoutes>
         ),
       },
       {
-        path: "saved-jobs",
+        path: "/saved-jobs",
         element: (
           <ProtectedRoutes>
-            <SavedJob />
+            <SavedJob />,
           </ProtectedRoutes>
         ),
       },
       {
-        path: "my-jobs",
+        path: "/my-jobs",
         element: (
           <ProtectedRoutes>
-            <MyJobs />
+            <MyJobs />,
           </ProtectedRoutes>
         ),
       },
