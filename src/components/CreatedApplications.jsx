@@ -18,7 +18,7 @@ import {
 import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const PER_PAGE = 6;
+const PER_PAGE = 2;
 
 const CreatedApplications = () => {
   const { user } = useUser();
@@ -74,7 +74,7 @@ const CreatedApplications = () => {
       ) : (
         <>
           {/* Applications list */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
+          <div className="flex flex-col gap-5 mt-4">
             {paginatedApplications.map((application) => (
               <ApplicationCard
                 key={application.id}

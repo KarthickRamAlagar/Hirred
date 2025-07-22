@@ -10,7 +10,7 @@ import MyJobs from "./pages/MyJobs";
 import "./App.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ProtectedRoutes from "./components/ProtectedRoutes";
-import SSOCallback from "./components/SSOCallback";
+
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -18,10 +18,6 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <LandingPage />,
-      },
-      {
-        path: "/sso-callback/google",
-        element: <SSOCallback />,
       },
       {
         path: "/onboarding",

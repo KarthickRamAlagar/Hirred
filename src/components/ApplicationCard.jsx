@@ -71,7 +71,7 @@ const ApplicationCard = ({ application, isJobseeker = false }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 flex-1">
-        <div className="flex flex-col md:flex-row justify-between gap-3">
+        <div className="flex flex-col sm:flex-row justify-between gap-3">
           <div className="flex gap-2 items-center">
             <BriefcaseBusiness size={22} className="text-blue-500 font-bold" />
             {application?.experience} Years of Experience
