@@ -18,7 +18,7 @@ import {
 import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const PER_PAGE = 2;
+const PER_PAGE = 4;
 
 const CreatedApplications = () => {
   const { user } = useUser();
