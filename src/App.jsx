@@ -10,7 +10,7 @@ import MyJobs from "./pages/MyJobs";
 import "./App.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ProtectedRoutes from "./components/ProtectedRoutes";
-
+import SignInRedirectHandler from "./components/SignInRedirectHandler";
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
@@ -74,6 +74,7 @@ const router = createBrowserRouter([
 const App = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <SignInRedirectHandler />
       <RouterProvider router={router} />
     </ThemeProvider>
   );

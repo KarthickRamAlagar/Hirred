@@ -59,7 +59,7 @@ const Header = () => {
             )}
             <UserButton
               appearance={{
-                elements: { avatarBox: "w-10 h-10" },
+                elements: { avatarBox: "w-12 h-12" },
               }}
             >
               <UserButton.MenuItems>
