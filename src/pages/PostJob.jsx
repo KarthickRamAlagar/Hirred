@@ -1,8 +1,4 @@
-import { getCompanies } from "@/api/apiCompanies";
-import { addNewJob } from "@/api/apiJobs";
-import AddCompanyDrawer from "@/components/AddCompanyDrawer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -11,17 +7,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import useFetch from "@/hooks/useFetch";
-import { useUser } from "@clerk/clerk-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import MDEditor from "@uiw/react-md-editor";
-import { State } from "country-state-city";
-import React, { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { BarLoader } from "react-spinners";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
+import { useUser } from "@clerk/clerk-react";
+import { useNavigate, Navigate } from "react-router-dom";
+import { State } from "country-state-city";
+import MDEditor from "@uiw/react-md-editor";
+
+import { getCompanies } from "@/api/apiCompanies";
+import { addNewJob } from "@/api/apiJobs";
+import AddCompanyDrawer from "@/components/AddCompanyDrawer";
+import useFetch from "@/hooks/useFetch";
+import { sendNotificationEmail } from "@/lib/emailNotification";
 
 const schema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -32,6 +34,9 @@ const schema = z.object({
 });
 
 const PostJob = () => {
+  const navigate = useNavigate();
+  const { isLoaded, user } = useUser();
+
   const {
     register,
     handleSubmit,
@@ -41,17 +46,12 @@ const PostJob = () => {
     defaultValues: { location: "", company_id: "", requirements: "" },
     resolver: zodResolver(schema),
   });
-  const { isLoaded, user } = useUser();
+
   const {
     loading: loadingCompanies,
     data: companies,
     fn: fnCompanies,
   } = useFetch(getCompanies);
-  useEffect(() => {
-    if (isLoaded) {
-      fnCompanies();
-    }
-  }, [isLoaded]);
 
   const {
     loading: loadingCreateJob,
@@ -60,6 +60,55 @@ const PostJob = () => {
     fn: fnCreateJob,
   } = useFetch(addNewJob);
 
+  const {
+    data: seekers = [],
+    fn: fetchSeekers,
+    loading: loadingSeekers,
+  } = useFetch(getAllSeekers); // ✅ Call API to get seekers
+
+  useEffect(() => {
+    if (isLoaded) {
+      fnCompanies();
+      fetchSeekers(); // ✅ Fetch seekers on mount
+    }
+  }, [isLoaded]);
+
+  useEffect(() => {
+    if (daataCreateJob?.length > 0) {
+      const createdJob = daataCreateJob[0];
+
+      // ✅ Notify employer
+      sendNotificationEmail({
+        type: "job_post",
+        target: "employer",
+        job: createdJob,
+        user,
+        playVoice: true,
+      });
+
+      // ✅ Notify all seekers
+      seekers.forEach((seeker) => {
+        sendNotificationEmail({
+          type: "job_post",
+          target: "seeker",
+          job: createdJob,
+          user: seeker,
+          playVoice: false,
+        });
+      });
+
+      navigate("/jobs");
+    }
+  }, [daataCreateJob]);
+
+  if (!isLoaded || loadingCompanies || loadingSeekers) {
+    return <BarLoader className="mb-4" width={"100%"} color="#36d7b7" />;
+  }
+
+  if (user?.unsafeMetadata?.role !== "employeer") {
+    return <Navigate to="/jobs" />;
+  }
+
   const onSubmit = (data) => {
     fnCreateJob({
       ...data,
@@ -67,17 +116,7 @@ const PostJob = () => {
       isOpen: true,
     });
   };
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (daataCreateJob?.length > 0) navigate("/jobs");
-  }, [loadingCreateJob]);
 
-  if (!isLoaded || loadingCompanies) {
-    return <BarLoader className="mb-4" width={"100%"} color="#36d7b7" />;
-  }
-  if (user?.unsafeMetadata?.role !== "employeer") {
-    return <Navigate to="/jobs" />;
-  }
   return (
     <div>
       <h1 className="gradient-title font-extrabold text-5xl sm:text-7xl text-center pb-8">
@@ -89,10 +128,12 @@ const PostJob = () => {
       >
         <Input placeholder="Job Title" {...register("title")} />
         {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+
         <Textarea placeholder="Job Description" {...register("description")} />
         {errors.description && (
           <p className="text-red-500">{errors.description.message}</p>
         )}
+
         <div className="flex gap-4 items-center">
           <Controller
             name="location"
@@ -139,9 +180,9 @@ const PostJob = () => {
               </Select>
             )}
           />
-          {/* Add company drwaer */}
-          <AddCompanyDrawer  fetchCompanies={fnCompanies}/>
+          <AddCompanyDrawer fetchCompanies={fnCompanies} />
         </div>
+
         {errors.location && (
           <p className="text-red-500">{errors.location.message}</p>
         )}
@@ -162,6 +203,7 @@ const PostJob = () => {
           <p className="text-red-500">{errorCreateJob.message}</p>
         )}
         {loadingCreateJob && <BarLoader width={"100%"} color="#36d7b7" />}
+
         <Button type="submit" variant="blue" size="lg">
           Submit
         </Button>

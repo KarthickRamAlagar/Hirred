@@ -19,7 +19,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import useFetch from "@/hooks/useFetch";
 import { applyToJob } from "@/api/apiApplications";
 import { BarLoader } from "react-spinners";
-// Zod Schema
+import { sendNotificationEmail } from "@/lib/emailNotification";
+
 const schema = z.object({
   experience: z
     .number()
@@ -27,7 +28,7 @@ const schema = z.object({
     .int(),
   skills: z.string().min(1, { message: "Skills are required" }),
   education: z.enum(["Intermediate", "Graduate", "Post Graduate"], {
-    message: "Education is requiredA",
+    message: "Education is required",
   }),
   resume: z
     .any()
@@ -37,7 +38,7 @@ const schema = z.object({
         (file[0].type === "application/pdf" ||
           file[0].type === "application/msword"),
       {
-        message: "Only ODF or Word documents are allowed",
+        message: "Only PDF or Word documents are allowed",
       }
     ),
 });
@@ -49,6 +50,7 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
   useEffect(() => {
     setIsApplied(applied);
   }, [applied]);
+
   const {
     register,
     handleSubmit,
@@ -65,22 +67,46 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
     fn: fnApply,
   } = useFetch(applyToJob);
 
-  const OnSubmit = (data) => {
+  const OnSubmit = async (data) => {
+    const file = data.resume[0];
+
     fnApply({
       ...data,
       job_id: job.id,
       jobseeker_id: user.id,
       name: user.fullName,
       status: "applied",
-      resume: data.resume[0],
-    }).then(async () => {
+      resume: file,
+    }).then(async (createdApp) => {
+      const resumeUrl = createdApp?.resume || "";
+
       await new Promise((res) => setTimeout(res, 800));
       fetchJob();
       reset();
       setIsApplied(true);
       setIsDrawerOpen(false);
+
+      //  Email and Voice Notifications
+      sendNotificationEmail({
+        type: "application",
+        target: "seeker",
+        job,
+        user,
+        resumeUrl,
+        playVoice: true,
+      });
+
+      sendNotificationEmail({
+        type: "application",
+        target: "employer",
+        job,
+        user,
+        resumeUrl,
+        playVoice: false,
+      });
     });
   };
+
   return (
     <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
       <DrawerTrigger asChild>
@@ -97,15 +123,16 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle className="flex justify-between pr-5 text-xl">
-            Apply for {job?.title} at {job?.company?.name}{" "}
+            Apply for {job?.title} at {job?.company?.name}
             <span>
-              <img src={job?.company?.logo_url} className="h-9  w-19 " />
+              <img src={job?.company?.logo_url} className="h-9 w-19" />
             </span>
           </DrawerTitle>
           <DrawerDescription className="text-lg flex">
-            Please Fill The Form Below.{" "}
+            Please Fill The Form Below.
           </DrawerDescription>
         </DrawerHeader>
+
         <form
           onSubmit={handleSubmit(OnSubmit)}
           className="flex flex-col gap-4 p-4 pb-0"
@@ -113,23 +140,23 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
           <Input
             type="number"
             placeholder="Years of Experience"
-            className="flex-1 "
-            {...register("experience", {
-              valueAsNumber: true,
-            })}
+            className="flex-1"
+            {...register("experience", { valueAsNumber: true })}
           />
           {errors.experience && (
             <p className="text-red-500">{errors.experience.message}</p>
           )}
+
           <Input
             type="text"
             placeholder="Skills (comma separated)"
-            className="flex-1 "
+            className="flex-1"
             {...register("skills")}
           />
           {errors.skills && (
             <p className="text-red-500">{errors.skills.message}</p>
           )}
+
           <Controller
             name="education"
             control={control}
@@ -137,9 +164,9 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
               <RadioGroup
                 onValueChange={field.onChange}
                 {...field}
-                className="flex mt-2 mb-2 "
+                className="flex mt-2 mb-2"
               >
-                <Label classNmae="space-x-2">Education :</Label>
+                <Label className="space-x-2">Education :</Label>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="Intermediate" id="intermediate" />
                   <Label htmlFor="intermediate">Intermediate</Label>
@@ -158,6 +185,7 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
           {errors.education && (
             <p className="text-red-500">{errors.education.message}</p>
           )}
+
           <Input
             type="file"
             accept=".pdf, .doc, .docx"
@@ -171,7 +199,8 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
             <p className="text-red-500">{errorApply?.message}</p>
           )}
           {loadingApply && <BarLoader width={"100%"} color="#36d7b7" />}
-          <Button size="lg" className="w-full text-lg font-bold ">
+
+          <Button size="lg" className="w-full text-lg font-bold">
             Apply
           </Button>
         </form>
