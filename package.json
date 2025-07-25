@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.35.3",
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/themes": "^2.3.3",
     "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^5.1.1",

@@ -1,6 +1,6 @@
 import supabaseClient, { supabaseUrl } from "@/utils/supabase";
 
-// - Apply to job ( candidate )
+//  Apply to job ( candidate )
 export async function applyToJob(token, _, jobData) {
   const supabase = await supabaseClient(token);
 
@@ -39,7 +39,7 @@ export async function updateApplicationStatus(token, { id }, status) {
   const { data, error } = await supabase
     .from("applications")
     .update({ status })
-    .eq("id",id)
+    .eq("id", id)
     .select();
 
   if (error || data.length === 0) {
@@ -54,7 +54,12 @@ export async function getApplications(token, { user_id }) {
   const supabase = await supabaseClient(token);
   const { data, error } = await supabase
     .from("applications")
-    .select("*, job:jobs(title, company:companies(name,logo_url))")
+    .select(
+      `*,
+    job:jobs(title, company:companies(name,logo_url)),
+    jobseeker:user_profiles(id, fullName, email)
+   `
+    )
     .eq("jobseeker_id", user_id);
 
   if (error) {
@@ -63,4 +68,21 @@ export async function getApplications(token, { user_id }) {
   }
 
   return data;
+}
+export async function checkApplicationStatus(token, job_id, jobseeker_id) {
+  const supabase = await supabaseClient(token);
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id, status, created_at")
+    .eq("job_id", job_id)
+    .eq("jobseeker_id", jobseeker_id)
+    .order("created_at", { ascending: false }); 
+
+  if (error) {
+    console.error("Error checking application status:", error);
+    return null;
+  }
+
+  const nonRejected = data?.find((app) => app.status !== "rejected");
+  return nonRejected || data?.[0] || null;
 }

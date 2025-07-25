@@ -60,48 +60,44 @@ const PostJob = () => {
     fn: fnCreateJob,
   } = useFetch(addNewJob);
 
-  const {
-    data: seekers = [],
-    fn: fetchSeekers,
-    loading: loadingSeekers,
-  } = useFetch(getAllSeekers); // ✅ Call API to get seekers
-
   useEffect(() => {
     if (isLoaded) {
       fnCompanies();
-      fetchSeekers(); // ✅ Fetch seekers on mount
     }
   }, [isLoaded]);
 
   useEffect(() => {
-    if (daataCreateJob?.length > 0) {
+    if (daataCreateJob?.length > 0 && companies?.length > 0) {
       const createdJob = daataCreateJob[0];
+      const selectedCompany = companies.find(
+        (com) => com.id === Number(createdJob.company_id)
+      );
 
-      // ✅ Notify employer
+      const logo_url = selectedCompany?.logo_url || "";
+      const companyObject = {
+        ...selectedCompany,
+        logo_url: logo_url.startsWith("http")
+          ? logo_url
+          : `https://yourdomain.com${logo_url}`,
+      };
+
       sendNotificationEmail({
         type: "job_post",
         target: "employer",
-        job: createdJob,
+        job: {
+          ...createdJob,
+          company: companyObject,
+        },
         user,
-        playVoice: true,
       });
 
-      // ✅ Notify all seekers
-      seekers.forEach((seeker) => {
-        sendNotificationEmail({
-          type: "job_post",
-          target: "seeker",
-          job: createdJob,
-          user: seeker,
-          playVoice: false,
-        });
-      });
-
-      navigate("/jobs");
+      setTimeout(() => {
+        navigate("/jobs");
+      }, 1000);
     }
-  }, [daataCreateJob]);
+  }, [daataCreateJob, companies]);
 
-  if (!isLoaded || loadingCompanies || loadingSeekers) {
+  if (!isLoaded || loadingCompanies) {
     return <BarLoader className="mb-4" width={"100%"} color="#36d7b7" />;
   }
 
@@ -114,6 +110,18 @@ const PostJob = () => {
       ...data,
       employeer_id: user.id,
       isOpen: true,
+    });
+
+    const voicePath = "/audio/Notifications_for_job_Post.mp3";
+    const audio = new Audio(voicePath);
+    console.log("Attempting to play:", voicePath);
+    audio.play().catch((err) => {
+      console.warn("Audio playback failed:", err.message);
+      setTimeout(() => {
+        audio.play().catch((err2) => {
+          console.warn("Retry failed:", err2.message);
+        });
+      }, 300);
     });
   };
 
@@ -189,6 +197,7 @@ const PostJob = () => {
         {errors.company_id && (
           <p className="text-red-500">{errors.company_id.message}</p>
         )}
+
         <Controller
           name="requirements"
           control={control}

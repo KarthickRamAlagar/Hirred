@@ -24,6 +24,7 @@ import {
 import useFetch from "@/hooks/useFetch";
 import { updateApplicationStatus } from "@/api/apiApplications";
 import { BarLoader } from "react-spinners";
+import { sendNotificationEmail } from "@/lib/emailNotification";
 
 const ApplicationCard = ({ application, isJobseeker = false }) => {
   const handleDowwnload = () => {
@@ -38,9 +39,30 @@ const ApplicationCard = ({ application, isJobseeker = false }) => {
       id: application.id,
     }
   );
-  const handleStatusChange = (status) => {
-    fnHiringStatus(status);
+  const handleStatusChange = async (status) => {
+    const updated = await fnHiringStatus(status);
+    const updatedApp = updated?.[0];
+    if (!updatedApp) return;
+
+    await sendNotificationEmail({
+      type: "status_update",
+      target: "seeker",
+      job: application?.job,
+      user: {
+        fullName: application?.jobseeker?.fullName,
+        emailAddresses: [{ emailAddress: application?.jobseeker?.email }],
+      },
+      resumeUrl: application?.resume,
+      applicantDetails: {
+        experience: application?.experience,
+        education: application?.education,
+        skills: application?.skills,
+      },
+      status, 
+    });
+    console.log("Email Payload:", payload);
   };
+
   return (
     <Card>
       {loadingHiringStatus && <BarLoader width={"100%"} color="#36d7b7" />}

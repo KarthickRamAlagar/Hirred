@@ -17,9 +17,10 @@ import z from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useFetch from "@/hooks/useFetch";
-import { applyToJob } from "@/api/apiApplications";
+import { applyToJob, checkApplicationStatus } from "@/api/apiApplications";
 import { BarLoader } from "react-spinners";
 import { sendNotificationEmail } from "@/lib/emailNotification";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
 const schema = z.object({
   experience: z
@@ -37,19 +38,16 @@ const schema = z.object({
         file[0] &&
         (file[0].type === "application/pdf" ||
           file[0].type === "application/msword"),
-      {
-        message: "Only PDF or Word documents are allowed",
-      }
+      { message: "Only PDF or Word documents are allowed" }
     ),
 });
 
-const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
-  const [isApplied, setIsApplied] = useState(applied);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+const ApplyJobDrawer = ({ job, fetchJob }) => {
+  const { user } = useUser();
+  const { getToken } = useAuth();
 
-  useEffect(() => {
-    setIsApplied(applied);
-  }, [applied]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState(null); 
 
   const {
     register,
@@ -57,9 +55,7 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
     control,
     formState: { errors },
     reset,
-  } = useForm({
-    resolver: zodResolver(schema),
-  });
+  } = useForm({ resolver: zodResolver(schema) });
 
   const {
     loading: loadingApply,
@@ -67,26 +63,46 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
     fn: fnApply,
   } = useFetch(applyToJob);
 
+  useEffect(() => {
+    const fetchStatus = async () => {
+      if (!user?.id || !job?.id) return;
+      try {
+        const token = await getToken();
+        const appStatus = await checkApplicationStatus(token, job.id, user.id);
+
+        //  Debug logs for inspection
+        console.log("🕵️‍♂️ Debug: job.id =", job.id);
+        console.log("🕵️‍♂️ Debug: user.id =", user.id);
+        console.log("🕵️‍♂️ Debug: Returned status =", appStatus?.status);
+
+        setApplicationStatus(appStatus?.status || null);
+      } catch (err) {
+        console.error("❌ Error fetching status:", err);
+        setApplicationStatus(null);
+      }
+    };
+    fetchStatus();
+  }, [job?.id, user?.id]);
+
   const OnSubmit = async (data) => {
     const file = data.resume[0];
+    const token = await getToken();
 
     fnApply({
       ...data,
       job_id: job.id,
       jobseeker_id: user.id,
-      name: user.fullName,
+      name: user.fullName || user.firstName,
       status: "applied",
       resume: file,
     }).then(async (createdApp) => {
-      const resumeUrl = createdApp?.resume || "";
-
+      const resumeUrl = createdApp?.[0]?.resume || "";
       await new Promise((res) => setTimeout(res, 800));
       fetchJob();
       reset();
-      setIsApplied(true);
+      setApplicationStatus("applied");
       setIsDrawerOpen(false);
 
-      //  Email and Voice Notifications
       sendNotificationEmail({
         type: "application",
         target: "seeker",
@@ -94,125 +110,133 @@ const ApplyJobDrawer = ({ user, job, applied = false, fetchJob }) => {
         user,
         resumeUrl,
         playVoice: true,
-      });
-
-      sendNotificationEmail({
-        type: "application",
-        target: "employer",
-        job,
-        user,
-        resumeUrl,
-        playVoice: false,
+        applicantDetails: {
+          experience: data.experience,
+          education: data.education,
+          skills: data.skills,
+        },
       });
     });
   };
+
+  //  Button Logic
+  const isHiringClosed = !job?.isOpen;
+  const canApply =
+    !isHiringClosed &&
+    (applicationStatus === null || applicationStatus === "rejected");
+
+  const buttonLabel = isHiringClosed
+    ? "Hiring Closed"
+    : applicationStatus === "applied"
+    ? "Applied"
+    : applicationStatus === "interviewing"
+    ? "Interviewing"
+    : applicationStatus === "hired"
+    ? "Hired"
+    : applicationStatus === "rejected"
+    ? "ReApply"
+    : "Apply";
 
   return (
     <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
       <DrawerTrigger asChild>
         <Button
           size="lg"
-          variant={job?.isOpen && !isApplied ? "blue" : "destructive"}
-          disabled={!job?.isOpen || isApplied}
+          variant={canApply ? "blue" : "destructive"}
+          disabled={!canApply}
           className="text-xl font-bold text-gradient-title"
         >
-          {job?.isOpen ? (isApplied ? "Applied" : "Apply") : "Hiring Closed"}
+          {buttonLabel}
         </Button>
       </DrawerTrigger>
 
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle className="flex justify-between pr-5 text-xl">
-            Apply for {job?.title} at {job?.company?.name}
-            <span>
-              <img src={job?.company?.logo_url} className="h-9 w-19" />
-            </span>
-          </DrawerTitle>
-          <DrawerDescription className="text-lg flex">
-            Please Fill The Form Below.
-          </DrawerDescription>
-        </DrawerHeader>
+      {canApply && (
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle className="flex justify-between pr-5 text-xl">
+              Apply for {job?.title} at {job?.company?.name}
+              <span>
+                <img src={job?.company?.logo_url} className="h-9 w-19" />
+              </span>
+            </DrawerTitle>
+            <DrawerDescription className="text-lg">
+              Please Fill The Form Below.
+            </DrawerDescription>
+          </DrawerHeader>
 
-        <form
-          onSubmit={handleSubmit(OnSubmit)}
-          className="flex flex-col gap-4 p-4 pb-0"
-        >
-          <Input
-            type="number"
-            placeholder="Years of Experience"
-            className="flex-1"
-            {...register("experience", { valueAsNumber: true })}
-          />
-          {errors.experience && (
-            <p className="text-red-500">{errors.experience.message}</p>
-          )}
-
-          <Input
-            type="text"
-            placeholder="Skills (comma separated)"
-            className="flex-1"
-            {...register("skills")}
-          />
-          {errors.skills && (
-            <p className="text-red-500">{errors.skills.message}</p>
-          )}
-
-          <Controller
-            name="education"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup
-                onValueChange={field.onChange}
-                {...field}
-                className="flex mt-2 mb-2"
-              >
-                <Label className="space-x-2">Education :</Label>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Intermediate" id="intermediate" />
-                  <Label htmlFor="intermediate">Intermediate</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Graduate" id="graduate" />
-                  <Label htmlFor="graduate">Graduate</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="Post Graduate" id="post-graduate" />
-                  <Label htmlFor="post-graduate">Post Graduate</Label>
-                </div>
-              </RadioGroup>
+          <form
+            onSubmit={handleSubmit(OnSubmit)}
+            className="flex flex-col gap-4 p-4 pb-0"
+          >
+            <Input
+              type="number"
+              placeholder="Years of Experience"
+              {...register("experience", { valueAsNumber: true })}
+            />
+            {errors.experience && (
+              <p className="text-red-500">{errors.experience.message}</p>
             )}
-          />
-          {errors.education && (
-            <p className="text-red-500">{errors.education.message}</p>
-          )}
 
-          <Input
-            type="file"
-            accept=".pdf, .doc, .docx"
-            className="flex-1 file:text-gray-500 cursor-pointer"
-            {...register("resume")}
-          />
-          {errors.resume && (
-            <p className="text-red-500">{errors.resume.message}</p>
-          )}
-          {errorApply?.message && (
-            <p className="text-red-500">{errorApply?.message}</p>
-          )}
-          {loadingApply && <BarLoader width={"100%"} color="#36d7b7" />}
+            <Input type="text" placeholder="Skills" {...register("skills")} />
+            {errors.skills && (
+              <p className="text-red-500">{errors.skills.message}</p>
+            )}
 
-          <Button size="lg" className="w-full text-lg font-bold">
-            Apply
-          </Button>
-        </form>
+            <Controller
+              name="education"
+              control={control}
+              defaultValue="Graduate"
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex mt-2 mb-2"
+                >
+                  <Label>Education :</Label>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Intermediate" id="intermediate" />
+                    <Label htmlFor="intermediate">Intermediate</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Graduate" id="graduate" />
+                    <Label htmlFor="graduate">Graduate</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Post Graduate" id="post-graduate" />
+                    <Label htmlFor="post-graduate">Post Graduate</Label>
+                  </div>
+                </RadioGroup>
+              )}
+            />
+            {errors.education && (
+              <p className="text-red-500">{errors.education.message}</p>
+            )}
 
-        <DrawerFooter className="mb-5">
-          <DrawerClose asChild>
-            <Button variant="destructive" className="text-lg">
-              Cancel
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              {...register("resume")}
+            />
+            {errors.resume && (
+              <p className="text-red-500">{errors.resume.message}</p>
+            )}
+            {errorApply?.message && (
+              <p className="text-red-500">{errorApply?.message}</p>
+            )}
+            {loadingApply && <BarLoader width={"100%"} color="#36d7b7" />}
+
+            <Button size="lg" variant="blue" disabled={loadingApply}>
+              Apply
             </Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
+          </form>
+
+          <DrawerFooter className="mb-5">
+            <DrawerClose asChild>
+              <Button variant="destructive">Cancel</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      )}
     </Drawer>
   );
 };
