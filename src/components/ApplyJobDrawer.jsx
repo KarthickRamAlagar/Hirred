@@ -47,7 +47,7 @@ const ApplyJobDrawer = ({ job, fetchJob }) => {
   const { getToken } = useAuth();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [applicationStatus, setApplicationStatus] = useState(null); 
+  const [applicationStatus, setApplicationStatus] = useState(null);
 
   const {
     register,
@@ -182,7 +182,7 @@ const ApplyJobDrawer = ({ job, fetchJob }) => {
               <p className="text-red-500">{errors.skills.message}</p>
             )}
 
-            <Controller
+            {/* <Controller
               name="education"
               control={control}
               defaultValue="Graduate"
@@ -207,7 +207,38 @@ const ApplyJobDrawer = ({ job, fetchJob }) => {
                   </div>
                 </RadioGroup>
               )}
+            /> */}
+            <Controller
+              name="education"
+              control={control}
+              defaultValue="Graduate"
+              render={({ field }) => (
+                <div className="flex flex-col w-full">
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-wrap gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Intermediate" id="intermediate" />
+                      <Label htmlFor="intermediate">Intermediate</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Graduate" id="graduate" />
+                      <Label htmlFor="graduate">Graduate</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="Post Graduate"
+                        id="post-graduate"
+                      />
+                      <Label htmlFor="post-graduate">Post Graduate</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
             />
+
             {errors.education && (
               <p className="text-red-500">{errors.education.message}</p>
             )}

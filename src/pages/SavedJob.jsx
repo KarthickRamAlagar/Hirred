@@ -54,7 +54,7 @@ const SavedJobs = () => {
 
   if (user?.unsafeMetadata?.role !== "jobseeker") {
     return (
-      <Card className="flex flex-col h-[300px] w-[400px] mt-[5rem] mx-auto lg:mx-[22rem] lg:w-[500px]">
+      <Card className="flex flex-col w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto mt-[5rem] h-[300px]">
         <CardHeader className="flex mt-3">
           <CardTitle className="flex flex-col justify-center items-center font-bold text-center">
             Access Denied

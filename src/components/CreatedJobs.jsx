@@ -47,7 +47,6 @@ const CreatedJobs = () => {
       setCurrentPage(page);
     }
   };
-
   return (
     <div>
       {loadingCreatedJobs ? (

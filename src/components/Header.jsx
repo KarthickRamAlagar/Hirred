@@ -39,45 +39,74 @@ const Header = () => {
 
   return (
     <>
-      <nav className="py-4 flex justify-between items-center">
-        <Link>
-          <img src="/logo.png" alt="logo" className="h-20" />
+      <nav
+        className={`py-4 px-4 flex ${
+          user?.unsafeMetadata?.role === "employeer"
+            ? "flex-col gap-6 md:flex-row md:items-center md:justify-between"
+            : "flex-row items-center justify-between"
+        }`}
+      >
+        {/* Logo */}
+        <Link
+          className={`flex ${
+            user?.unsafeMetadata?.role === "employeer"
+              ? "justify-center md:justify-start"
+              : ""
+          }`}
+        >
+          <img src="/logo.png" alt="logo" className="h-16" />
         </Link>
-        <div className="flex gap-8">
+
+        {/* Actions */}
+        <div
+          className={`flex ${
+            user?.unsafeMetadata?.role === "employeer"
+              ? "w-full justify-between items-center gap-4 md:w-auto md:justify-end"
+              : "items-center gap-4"
+          }`}
+        >
+          {/* Login Button */}
           <SignedOut>
-            <Button onClick={() => setShow(true)}>Login</Button>
+            <Button onClick={() => setShow(true)} className="w-32 sm:w-36">
+              Login
+            </Button>
           </SignedOut>
+
+          {/* Post Job Button */}
           <SignedIn>
             {user?.unsafeMetadata?.role === "employeer" && (
               <Link to="/post-job">
-                {/* want to give condition for role based  */}
-                <Button variant="destructive" className="rounded-full">
-                  <PenBox size={20} className="mr-2" />
+                <Button
+                  variant="destructive"
+                  className="rounded-full flex items-center gap-2 w-36 justify-center"
+                >
+                  <PenBox size={20} />
                   Post a Job
                 </Button>
               </Link>
             )}
-            <UserButton
-              appearance={{
-                elements: { avatarBox: "w-12 h-12" },
-              }}
-            >
-              <UserButton.MenuItems>
-                <UserButton.Link
-                  label="My Jobs"
-                  labelIcon={<BriefcaseBusiness size={15} />}
-                  href="/my-jobs"
-                />
-                <UserButton.Link
-                  label="Saved Jobs"
-                  labelIcon={<Heart size={15} />}
-                  href="/saved-jobs"
-                />
-              </UserButton.MenuItems>
-            </UserButton>
+
+            {/* User Avatar */}
+            <div className="sm:mt-0 mt-2">
+              <UserButton appearance={{ elements: { avatarBox: "w-12 h-12" } }}>
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="My Jobs"
+                    labelIcon={<BriefcaseBusiness size={15} />}
+                    href="/my-jobs"
+                  />
+                  <UserButton.Link
+                    label="Saved Jobs"
+                    labelIcon={<Heart size={15} />}
+                    href="/saved-jobs"
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
+            </div>
           </SignedIn>
         </div>
       </nav>
+
       {show && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"

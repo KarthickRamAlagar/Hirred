@@ -41,22 +41,26 @@ const LandingPage = () => {
           Explore thousands of job listings or find the perfect candidate
         </p>
       </section>
-      <div className="flex gap-6 justify-center">
-        {/* buttons */}
-        <Link to="/jobs">
-          <Button variant="blue" size="xl">
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-center items-center w-full mt-4 px-4">
+        <Link to="/jobs" className="w-full sm:w-auto">
+          <Button
+            variant="blue"
+            size="xl"
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
+          >
             Find Jobs
-            <span>
-              <Briefcase />
-            </span>
+            <Briefcase />
           </Button>
         </Link>
-        <Link to="/post-job">
-          <Button size="xl" variant="destructive">
+
+        <Link to="/post-job" className="w-full sm:w-auto">
+          <Button
+            variant="destructive"
+            size="xl"
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
+          >
             Post Jobs
-            <span>
-              <FilePlus />
-            </span>
+            <FilePlus />
           </Button>
         </Link>
       </div>
