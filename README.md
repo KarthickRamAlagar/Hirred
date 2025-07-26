@@ -20,7 +20,8 @@
   <h3>
     Hired is a modern, responsive job board that connects recruiters and job seekers. Built with a scalable architecture and modern UI/UX for real-world usability.
   </h3>
-  <p><a href="(https://hirrdv1.vercel.app/)" target="_blank">🚀 <strong>Live Demo</strong></a></p>
+<p><a href="https://hirrdv1.vercel.app/" target="_blank"><strong>Live Demo</strong></a></p>
+
 </div>
 
 ---
